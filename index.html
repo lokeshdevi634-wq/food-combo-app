@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Food Recipe Mixer & Combo Creator</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #0f172a;
+      color: #ffffff;
+      padding: 2rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      font-size: 2.3rem;
+      color: #f59e0b;
+      margin-bottom: 0.5rem;
+    }
+
+    p.subtitle {
+      color: #9ca3af;
+      font-size: 1rem;
+    }
+
+    /* Ingredient Selector Box */
+    .ingredients-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 1rem;
+      width: 100%;
+      max-width: 800px;
+      margin-bottom: 2rem;
+    }
+
+    .item-card {
+      background-color: #1e293b;
+      border: 2px solid #334155;
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+
+    .item-card:hover {
+      border-color: #f59e0b;
+      transform: translateY(-3px);
+    }
+
+    .item-card.selected {
+      background-color: #3b82f6;
+      border-color: #60a5fa;
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.5);
+    }
+
+    .emoji {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .name {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    /* Action & Result Section */
+    .controls {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .btn {
+      padding: 0.8rem 1.8rem;
+      font-size: 1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn-mix {
+      background-color: #10b981;
+      color: white;
+    }
+
+    .btn-mix:hover {
+      background-color: #059669;
+    }
+
+    .btn-clear {
+      background-color: #ef4444;
+      color: white;
+    }
+
+    .btn-clear:hover {
+      background-color: #dc2626;
+    }
+
+    /* Result Card */
+    .result-card {
+      background-color: #1e293b;
+      border-radius: 16px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 600px;
+      text-align: center;
+      border: 2px dashed #475569;
+    }
+
+    .result-title {
+      font-size: 1.8rem;
+      color: #f59e0b;
+      margin-bottom: 0.8rem;
+    }
+
+    .result-desc {
+      font-size: 1.05rem;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🍳 Food Combo Mixer</h1>
+    <p class="subtitle">Select any ingredients and click "Mix Ingredients" to see what Dish is created!</p>
+  </header>
+
+  <!-- 10 Food Items Selection -->
+  <div class="ingredients-grid" id="ingredientsGrid"></div>
+
+  <!-- Action Buttons -->
+  <div class="controls">
+    <button class="btn btn-mix" onclick="mixIngredients()">🥣 Mix Ingredients</button>
+    <button class="btn btn-clear" onclick="clearSelection()">🔄 Reset</button>
+  </div>
+
+  <!-- Dish Result Box -->
+  <div class="result-card" id="resultCard">
+    <div class="emoji" id="resEmoji">🍽️</div>
+    <div class="result-title" id="resTitle">Select Ingredients</div>
+    <div class="result-desc" id="resDesc">Click on 2 or more ingredients above to make a food combo!</div>
+  </div>
+
+  <script>
+    // 10 Food Items List
+    const items = [
+      { id: 'bread', name: 'Bread', emoji: '🍞' },
+      { id: 'cheese', name: 'Cheese', emoji: '🧀' },
+      { id: 'potato', name: 'Potato', emoji: '🥔' },
+      { id: 'tomato', name: 'Tomato', emoji: '🍅' },
+      { id: 'milk', name: 'Milk', emoji: '🥛' },
+      { id: 'tea_leaves', name: 'Tea Leaves', emoji: '🍃' },
+      { id: 'rice', name: 'Rice', emoji: '🍚' },
+      { id: 'paneer', name: 'Paneer', emoji: '🧀' },
+      { id: 'chocolate', name: 'Chocolate', emoji: '🍫' },
+      { id: 'bun', name: 'Burger Bun', emoji: '🍔' }
+    ];
+
+    // Combination Recipes Database
+    const recipes = [
+      {
+        ingredients: ['bread', 'cheese'],
+        dish: 'Cheese Sandwich / Toast',
+        emoji: '🥪',
+        desc: 'A crispy, warm and melted cheesy delight made with golden roasted bread.'
+      },
+      {
+        ingredients: ['milk', 'tea_leaves'],
+        dish: 'Indian Masala Chai',
+        emoji: '☕',
+        desc: 'A hot, aromatic and refreshing cup of tea boiled with milk.'
+      },
+      {
+        ingredients: ['potato', 'bun'],
+        dish: 'Aloo Vada Pav / Veg Burger',
+        emoji: '🍔',
+        desc: 'Spicy mashed potato patty layered inside soft bread buns!'
+      },
+      {
+        ingredients: ['paneer', 'tomato'],
+        dish: 'Paneer Butter Masala',
+        emoji: '🍲',
+        desc: 'Rich, creamy tomato gravy paired with soft cottage cheese cubes.'
+      },
+      {
+        ingredients: ['bread', 'chocolate'],
+        dish: 'Chocolate Toast',
+        emoji: '🍞🍫',
+        desc: 'Sweet toasted bread smeared with melted rich chocolate spread.'
+      },
+      {
+        ingredients: ['milk', 'chocolate'],
+        dish: 'Hot Chocolate Shake',
+        emoji: '🥤',
+        desc: 'Rich, thick chocolate blended into chilled creamy milk.'
+      },
+      {
+        ingredients: ['rice', 'tomato'],
+        dish: 'Tomato Rice / Pulao',
+        emoji: '🍛',
+        desc: 'Tangy, flavorful rice cooked with spiced tomato puree.'
+      },
+      {
+        ingredients: ['potato', 'cheese'],
+        dish: 'Cheesy Potato Bites / Fries',
+        emoji: '🍟',
+        desc: 'Crispy fried potato wedges smothered in melted gooey cheese.'
+      },
+      {
+        ingredients: ['bread', 'potato'],
+        dish: 'Aloo Bread Roll / Sandwich',
+        emoji: '🥪',
+        desc: 'Crispy fried bread stuffed with seasoned potato filling.'
+      },
+      {
+        ingredients: ['milk', 'rice'],
+        dish: 'Sweet Kheer (Rice Pudding)',
+        emoji: '🥣',
+        desc: 'Traditional sweet pudding cooked with rice, milk and cardamom.'
+      }
+    ];
+
+    let selectedIngredients = [];
+
+    // Render items in HTML
+    const grid = document.getElementById('ingredientsGrid');
+    items.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'item-card';
+      card.id = 'item-' + item.id;
+      card.onclick = () => toggleSelect(item.id);
+      card.innerHTML = `
+        <div class="emoji">${item.emoji}</div>
+        <div class="name">${item.name}</div>
+      `;
+      grid.appendChild(card);
+    });
+
+    // Toggle selection
+    function toggleSelect(id) {
+      const index = selectedIngredients.indexOf(id);
+      const card = document.getElementById('item-' + id);
+
+      if (index > -1) {
+        selectedIngredients.splice(index, 1);
+        card.classList.remove('selected');
+      } else {
+        selectedIngredients.push(id);
+        card.classList.add('selected');
+      }
+    }
+
+    // Mix selected items
+    function mixIngredients() {
+      const resEmoji = document.getElementById('resEmoji');
+      const resTitle = document.getElementById('resTitle');
+      const resDesc = document.getElementById('resDesc');
+
+      if (selectedIngredients.length < 2) {
+        resEmoji.innerText = '⚠️';
+        resTitle.innerText = 'Select At Least 2 Items';
+        resDesc.innerText = 'Please select 2 or more ingredients to create a recipe combo!';
+        return;
+      }
+
+      // Check for exact matching recipes
+      const match = recipes.find(r => 
+        r.ingredients.length === selectedIngredients.length &&
+        r.ingredients.every(ing => selectedIngredients.includes(ing))
+      );
+
+      if (match) {
+        resEmoji.innerText = match.emoji;
+        resTitle.innerText = match.dish;
+        resDesc.innerText = match.desc;
+      } else {
+        resEmoji.innerText = '🧪';
+        resTitle.innerText = 'Experimental Fusion Dish!';
+        resDesc.innerText = `You created a unique experimental dish using: ${selectedIngredients.map(id => items.find(i => i.id === id).name).join(', ')}!`;
+      }
+    }
+
+    // Reset All
+    function clearSelection() {
+      selectedIngredients = [];
+      document.querySelectorAll('.item-card').forEach(c => c.classList.remove('selected'));
+      document.getElementById('resEmoji').innerText = '🍽️';
+      document.getElementById('resTitle').innerText = 'Select Ingredients';
+      document.getElementById('resDesc').innerText = 'Click on 2 or more ingredients above to make a food combo!';
+    }
+  </script>
+</body>
+</html>
